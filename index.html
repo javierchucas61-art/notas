@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title> notas</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f6f7fb;
+  transition: 0.3s;
+}
+
+/* DARK MODE */
+.dark {
+  background: #1e1e2f;
+  color: white;
+}
+
+.dark .card, .dark .sidebar, .dark .navbar {
+  background: #2a2a40;
+}
+
+.dark input, .dark textarea {
+  background: #1e1e2f;
+  color: white;
+  border: 1px solid #555;
+}
+
+/* NAVBAR */
+.navbar {
+  height: 60px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* LAYOUT */
+.container {
+  display: flex;
+  height: calc(100vh - 60px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 240px;
+  background: white;
+  padding: 20px;
+}
+
+.menu-item {
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.menu-item.active {
+  background: #eef0ff;
+  color: #6c63ff;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* SECTIONS */
+.section { display: none; }
+.section.active { display: block; }
+
+/* CARD */
+.card {
+  background: white;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 15px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* TASK */
+.task {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 10px;
+  cursor: grab;
+}
+
+.task:active {
+  opacity: 0.5;
+}
+
+.completed {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/* PRIORIDADES */
+.alta { border-left: 5px solid red; }
+.media { border-left: 5px solid orange; }
+.baja { border-left: 5px solid green; }
+
+/* PROGRESS */
+.progress-bar {
+  height: 10px;
+  background: #ddd;
+  border-radius: 10px;
+}
+
+.progress {
+  height: 10px;
+  background: #6c63ff;
+  width: 0%;
+}
+
+/* INPUT */
+input, textarea, select {
+  margin: 5px 0;
+  padding: 8px;
+  width: 100%;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <strong>📒 notas</strong>
+  <div>
+    <input placeholder="Buscar..." oninput="buscar(this.value)">
+    <button onclick="toggleDark()">🌙</button>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="sidebar">
+  <div class="menu-item active" onclick="cambiar('notas', this)">📝 Notas</div>
+  <div class="menu-item" onclick="cambiar('tareas', this)">✅ Tareas</div>
+</div>
+
+<div class="main">
+
+<!-- NOTAS -->
+<div id="notas" class="section active">
+  <div class="card">
+    <textarea id="notaInput" placeholder="Nueva nota..."></textarea>
+    <button onclick="guardarNota()">Guardar</button>
+  </div>
+
+  <div id="listaNotas"></div>
+</div>
+
+<!-- TAREAS -->
+<div id="tareas" class="section">
+  <div class="card">
+    <input id="taskInput" placeholder="Nueva tarea...">
+    <select id="prioridad">
+      <option value="baja">Baja</option>
+      <option value="media">Media</option>
+      <option value="alta">Alta</option>
+    </select>
+    <input type="date" id="fecha">
+    <button onclick="addTask()">Agregar</button>
+  </div>
+
+  <div class="card">
+    <p id="texto"></p>
+    <div class="progress-bar">
+      <div class="progress" id="barra"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Pendientes</h3>
+    <div id="pendientes"></div>
+  </div>
+
+  <div class="card">
+    <h3>Completadas</h3>
+    <div id="completadas"></div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<script>
+// NAV
+function cambiar(sec, el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(sec).classList.add('active');
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// DARK
+function toggleDark(){
+  document.body.classList.toggle("dark");
+}
+
+// NOTAS
+let notas = JSON.parse(localStorage.getItem("notas")) || [];
+
+function guardarNota(){
+  const t = notaInput.value;
+  if(!t) return;
+  notas.push(t);
+  localStorage.setItem("notas", JSON.stringify(notas));
+  notaInput.value="";
+  renderNotas();
+}
+
+function renderNotas(f=""){
+  listaNotas.innerHTML="";
+  notas.filter(n=>n.toLowerCase().includes(f)).forEach((n,i)=>{
+    const div=document.createElement("div");
+    div.className="card";
+    div.innerHTML=`
+      <textarea onchange="editarNota(${i},this.value)">${n}</textarea>
+      <button onclick="eliminarNota(${i})">🗑️</button>
+    `;
+    listaNotas.appendChild(div);
+  });
+}
+
+function editarNota(i,t){
+  notas[i]=t;
+  localStorage.setItem("notas", JSON.stringify(notas));
+}
+
+function eliminarNota(i){
+  notas.splice(i,1);
+  localStorage.setItem("notas", JSON.stringify(notas));
+  renderNotas();
+}
+
+// TAREAS
+let tareas = JSON.parse(localStorage.getItem("tareas")) || [];
+let dragIndex=null;
+
+function addTask(){
+  tareas.push({
+    texto: taskInput.value,
+    done:false,
+    prioridad: prioridad.value,
+    fecha: fecha.value
+  });
+  taskInput.value="";
+  render();
+  save();
+}
+
+function toggle(i){
+  tareas[i].done=!tareas[i].done;
+  save(); render();
+}
+
+function removeTask(i){
+  tareas.splice(i,1);
+  save(); render();
+}
+
+function drag(i){ dragIndex=i; }
+
+function drop(i){
+  const temp=tareas[dragIndex];
+  tareas.splice(dragIndex,1);
+  tareas.splice(i,0,temp);
+  save(); render();
+}
+
+function save(){
+  localStorage.setItem("tareas", JSON.stringify(tareas));
+}
+
+function render(){
+  pendientes.innerHTML="";
+  completadas.innerHTML="";
+  let done=0;
+
+  tareas.forEach((t,i)=>{
+    const div=document.createElement("div");
+    div.className="task "+t.prioridad;
+    div.draggable=true;
+    div.ondragstart=()=>drag(i);
+    div.ondrop=()=>drop(i);
+    div.ondragover=e=>e.preventDefault();
+
+    div.innerHTML=`
+      <span class="${t.done?'completed':''}">
+        <input type="checkbox" ${t.done?"checked":""} onclick="toggle(${i})">
+        <input value="${t.texto}" onchange="editarTarea(${i},this.value)">
+        <small>${t.fecha||""}</small>
+      </span>
+      <button onclick="removeTask(${i})">🗑️</button>
+    `;
+
+    if(t.done){ done++; completadas.appendChild(div); }
+    else pendientes.appendChild(div);
+  });
+
+  const total=tareas.length;
+  barra.style.width=(total?done/total*100:0)+"%";
+  texto.innerText=`${done} de ${total} tareas completadas`;
+}
+
+function editarTarea(i,t){
+  tareas[i].texto=t;
+  save();
+}
+
+// ALERTAS
+function revisar(){
+  const hoy=new Date().toISOString().split("T")[0];
+  tareas.forEach(t=>{
+    if(t.fecha && t.fecha<hoy && !t.done){
+      console.log("Tarea vencida:",t.texto);
+    }
+  });
+}
+
+// BUSCAR
+function buscar(t){
+  renderNotas(t.toLowerCase());
+}
+
+// INIT
+render();
+renderNotas();
+revisar();
+</script>
+
+</body>
+</html>
