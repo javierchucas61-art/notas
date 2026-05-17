@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title> notas</title>
 
 <style>
@@ -129,6 +129,47 @@ input, textarea, select {
   margin: 5px 0;
   padding: 8px;
   width: 100%;
+}
+/* celular */
+@media (max-width: 768px) {
+
+  .container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .main {
+    padding: 10px;
+  }
+
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
+  }
+
+}
+/* facil de tocar */
+@media (max-width: 768px) {
+
+  input, textarea, select, button {
+    width: 100%;
+    font-size: 16px;
+  }
+
+}
+/* tarjetas */
+@media (max-width: 768px) {
+
+  .card {
+    padding: 15px;
+  }
+
 }
 </style>
 </head>
@@ -340,6 +381,22 @@ function buscar(t){
 render();
 renderNotas();
 revisar();
+
+/* boton */
+
+
+/* funcion */
+function moverArriba(i){
+  if(i===0) return;
+  [tareas[i], tareas[i-1]] = [tareas[i-1], tareas[i]];
+  save(); render();
+}
+
+function moverAbajo(i){
+  if(i===tareas.length-1) return;
+  [tareas[i], tareas[i+1]] = [tareas[i+1], tareas[i]];
+  save(); render();
+}
 </script>
 
 </body>
